@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "yarnandneedles",
+  "version": "${version}",
+  "name": "Yarn and Needles",
+  "description": "Fabric library for the automagical makening of simple* things.",
+  "authors": [
+    "ReMod-Studio"
+  ],
+  "contributors": [
+    "leocth"
+  ],
+  "contact": {},
+  "license": "Apache-2.0",
+  "environment": "*",
+  "depends": {
+    "fabricloader": ">=0.11.1",
+    "fabric": "*"
+  }
+}
