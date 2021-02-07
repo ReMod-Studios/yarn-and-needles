@@ -10,6 +10,7 @@
   "contributors": [
     "leocth"
   ],
+  "mixins": [ "yarnandneedles.mixins.json" ],
   "contact": {},
   "license": "Apache-2.0",
   "environment": "*",
