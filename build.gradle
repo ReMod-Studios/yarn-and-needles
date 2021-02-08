@@ -26,10 +26,6 @@ dependencies {
 
 	modImplementation "com.lettuce.fudge:artifice:$artifice_version"
 	include "com.lettuce.fudge:artifice:$artifice_version"
-
-	// geckolib is currently unavailable for 1.17 :sadtater:
-	//modImplementation "software.bernie.geckolib:geckolib-fabric-${project.geckolib_version}"
-
 }
 
 processResources {

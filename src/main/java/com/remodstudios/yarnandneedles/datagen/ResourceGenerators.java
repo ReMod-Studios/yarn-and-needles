@@ -1,5 +1,6 @@
 package com.remodstudios.yarnandneedles.datagen;
 
+import com.remodstudios.yarnandneedles.datagen.generators.NoOpResourceGenerator;
 import com.remodstudios.yarnandneedles.datagen.generators.block.DoorBlockGenerator;
 import com.remodstudios.yarnandneedles.datagen.generators.block.LogBlockGenerator;
 import com.remodstudios.yarnandneedles.datagen.generators.block.SimpleBlockGenerator;
@@ -9,6 +10,7 @@ import com.remodstudios.yarnandneedles.datagen.generators.item.SimpleItemGenerat
 
 public final class ResourceGenerators {
 
+    public static final ResourceGenerator NO_OP = new NoOpResourceGenerator();
     public static final ResourceGenerator SIMPLE_BLOCK = new SimpleBlockGenerator();
     public static final ResourceGenerator SIMPLE_ITEM = new SimpleItemGenerator();
     public static final ResourceGenerator BLOCK_ITEM = new BlockItemGenerator();
