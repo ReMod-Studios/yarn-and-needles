@@ -58,7 +58,7 @@ public class ItemRegistry {
     }
 
     protected BlockItem addBlockItem(String name, ResourceGenerator generator, Block block) {
-        return addBlockItem(name, ResourceGenerators.BLOCK_ITEM, block, getDefaultSettings());
+        return addBlockItem(name, generator, block, getDefaultSettings());
     }
 
     protected BlockItem addBlockItem(String name, ResourceGenerator generator, Block block, FabricItemSettings settings) {
