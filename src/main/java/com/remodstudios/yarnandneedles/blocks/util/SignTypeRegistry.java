@@ -1,4 +1,4 @@
-package com.remodstudios.yarnandneedles.blocks;
+package com.remodstudios.yarnandneedles.blocks.util;
 
 import com.remodstudios.yarnandneedles.mixin.signs.SignTypeAccessor;
 import net.minecraft.util.SignType;

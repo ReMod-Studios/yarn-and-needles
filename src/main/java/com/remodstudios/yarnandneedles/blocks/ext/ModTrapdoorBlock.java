@@ -1,4 +1,4 @@
-package com.remodstudios.yarnandneedles.blocks;
+package com.remodstudios.yarnandneedles.blocks.ext;
 
 import net.minecraft.block.TrapdoorBlock;
 
