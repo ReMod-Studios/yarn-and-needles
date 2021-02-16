@@ -1,0 +1,12 @@
+{
+    "required": true,
+    "package": "com.remodstudios.yaneedles.extensions.mixin",
+    "compatibilityLevel": "JAVA_8",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "mixins": [
+        "signs.SignTypeAccessor",
+        "signs.BlockEntityTypeMixin"
+    ]
+}
