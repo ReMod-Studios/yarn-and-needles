@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "yaneedles",
+  "id": "yaneedles-datagen",
   "version": "${version}",
-  "name": "Yarn and Needles",
-  "description": "Fabric library for the automagical makening of simple* things.",
+  "name": "Yarn and Needles: Datagen",
+  "description": "Some helpers, utilities and widening here and there",
   "authors": [
     "ReMod-Studios"
   ],

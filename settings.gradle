@@ -11,5 +11,4 @@ pluginManagement {
 
 include ':extensions'
 include ':datagen'
-include ':registry'
 include ':annotations'
