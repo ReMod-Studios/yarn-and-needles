@@ -6,5 +6,6 @@ public class Test implements ModInitializer {
     @Override
     public void onInitialize() {
         TestBlocksRegistry.init();
+        TestItemsRegistry.init();
     }
 }
