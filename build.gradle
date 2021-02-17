@@ -2,7 +2,6 @@ plugins {
 	id 'fabric-loom' version '0.5-SNAPSHOT' apply false
 }
 
-group = project.maven_group
 
 allprojects {
 	apply plugin: 'fabric-loom'
@@ -54,11 +53,14 @@ sourceSets {
 	testmod {
 		compileClasspath += main.compileClasspath
 		runtimeClasspath += main.runtimeClasspath
+		annotationProcessorPath += main.annotationProcessorPath
 	}
 }
 
+group = project.maven_group
+
 subprojects {
-	group = "${project.maven_group}.${project.archives_base_name}"
+	group = "$maven_group.$archives_base_name"
 }
 
 subprojects.each {
@@ -66,30 +68,19 @@ subprojects.each {
 }
 
 dependencies {
+	annotationProcessor project(":annotations")
 	testmodCompile sourceSets.main.output
+
 	afterEvaluate {
 		subprojects.each {
-			compile project(path: ":${it.name}")
-			include project("${it.name}:")
+			compile project(path: "${it.name}")
+			include project(it.name)
 		}
+
 	}
 }
+
 publishing {
-	// TODO - until we figure out how to do github packages properly - leocth
-	/*
-	repositories {
-		maven {
-			name = "GitHubPackages"
-			url = uri("https://maven.pkg.github.com/ReMod-Studios/yarn-and-needles")
-			credentials {
-				username = System.getenv("GITHUB_ACTOR")
-				password = System.getenv("GITHUB_TOKEN")
-			}
-		}
-	}
-
-	 */
-
 	publications {
 		mavenJava(MavenPublication) {
 			// add all the jars that should be included when publishing to maven

@@ -1,12 +1,8 @@
 package com.remodstudios.yaneedles.datagen;
 
-import com.remodstudios.yaneedles.datagen.generators.NoOpResourceGenerator;
-import com.remodstudios.yaneedles.datagen.generators.block.DoorBlockGenerator;
-import com.remodstudios.yaneedles.datagen.generators.block.LogBlockGenerator;
-import com.remodstudios.yaneedles.datagen.generators.block.SimpleBlockGenerator;
-import com.remodstudios.yaneedles.datagen.generators.block.TrapdoorBlockGenerator;
-import com.remodstudios.yaneedles.datagen.generators.item.BlockItemGenerator;
-import com.remodstudios.yaneedles.datagen.generators.item.SimpleItemGenerator;
+import com.remodstudios.yaneedles.datagen.generators.*;
+import com.remodstudios.yaneedles.datagen.generators.block.*;
+import com.remodstudios.yaneedles.datagen.generators.item.*;
 import net.minecraft.util.Identifier;
 
 public final class ResourceGenerators {
