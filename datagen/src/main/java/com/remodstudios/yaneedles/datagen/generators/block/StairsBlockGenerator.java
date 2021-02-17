@@ -9,15 +9,20 @@ import net.minecraft.block.enums.StairShape;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 
+import java.util.Map;
+
 public class StairsBlockGenerator extends AbstractParentedBlockGenerator {
 
+    public StairsBlockGenerator(Map<String, String> arguments) {
+        super(arguments);
+    }
     public StairsBlockGenerator(Identifier baseBlockId) {
         super(baseBlockId);
     }
 
     @Override
     protected void generateBlockStates(ArtificeResourcePack.ClientResourcePackBuilder rrp, Identifier id) {
-        Identifier blockPath = IdUtils.wrapPath("block/", id);
+        Identifier blockPath = getBlockSubPath(id);
 
         // i hate my life
         rrp.addBlockState(id, state -> {

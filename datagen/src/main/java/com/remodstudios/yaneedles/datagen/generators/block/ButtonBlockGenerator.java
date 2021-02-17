@@ -10,26 +10,31 @@ import net.minecraft.block.enums.WallMountLocation;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 
+import java.util.Map;
+
 public class ButtonBlockGenerator extends AbstractParentedBlockGenerator {
 
-    private static final Object2IntMap<Direction> dir2Deg = new Object2IntLinkedOpenHashMap<>();
+    private static final Object2IntMap<Direction> DIR2DEG = new Object2IntLinkedOpenHashMap<>();
 
     static {
         // for some reason its clockwise instead of counterclockwise... - leocth
-        dir2Deg.put(Direction.NORTH, 0);
-        dir2Deg.put(Direction.EAST, 1);
-        dir2Deg.put(Direction.SOUTH, 2);
-        dir2Deg.put(Direction.WEST, 3);
+        DIR2DEG.put(Direction.NORTH, 0);
+        DIR2DEG.put(Direction.EAST, 1);
+        DIR2DEG.put(Direction.SOUTH, 2);
+        DIR2DEG.put(Direction.WEST, 3);
     }
 
+    public ButtonBlockGenerator(Map<String, String> arguments) {
+        super(arguments);
+    }
     public ButtonBlockGenerator(Identifier baseBlockId) {
         super(baseBlockId);
     }
 
     @Override
     protected void generateBlockStates(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
-        Identifier blockPath = IdUtils.wrapPath("block/", id);
-        Identifier pressedModelPath = IdUtils.wrapPath("block/", id, "_pressed");
+        Identifier blockPath = getBlockSubPath(id);
+        Identifier pressedModelPath = getBlockSubPath(id, "_pressed");
 
         pack.addBlockState(id, state -> {
             for (Direction facing : AbstractButtonBlock.FACING.getValues())
@@ -70,7 +75,7 @@ public class ButtonBlockGenerator extends AbstractParentedBlockGenerator {
     }
 
     private static void applyRotation(BlockStateBuilder.Variant variant, Direction facing, WallMountLocation face) {
-        int y = dir2Deg.getInt(facing);
+        int y = DIR2DEG.getInt(facing);
         if (face == WallMountLocation.CEILING) y += 2;
         variant.rotationY(y % 4 * 90);
     }

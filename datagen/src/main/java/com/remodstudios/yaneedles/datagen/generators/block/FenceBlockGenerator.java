@@ -6,10 +6,14 @@ import com.swordglowsblue.artifice.api.util.IdUtils;
 import com.swordglowsblue.artifice.api.util.Processor;
 import net.minecraft.util.Identifier;
 
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class FenceBlockGenerator extends AbstractParentedBlockGenerator {
 
+    public FenceBlockGenerator(Map<String, String> arguments) {
+        super(arguments);
+    }
     public FenceBlockGenerator(Identifier baseBlockId) {
         super(baseBlockId);
     }

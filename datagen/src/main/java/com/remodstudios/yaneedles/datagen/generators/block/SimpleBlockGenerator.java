@@ -10,7 +10,7 @@ public class SimpleBlockGenerator implements ResourceGenerator {
     protected void generateBlockStates(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
         pack.addBlockState(id, state -> state
             .variant("", variant -> variant
-                .model(IdUtils.wrapPath("block/", id))
+                .model(getBlockSubPath(id))
             )
         );
     }
@@ -18,12 +18,12 @@ public class SimpleBlockGenerator implements ResourceGenerator {
     protected void generateModels(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
         pack.addBlockModel(id, model -> model
             .parent(new Identifier("block/cube_all"))
-            .texture("all", IdUtils.wrapPath("block/", id))
+            .texture("all", getBlockSubPath(id))
         );
     }
 
     protected void generateLootTable(ArtificeResourcePack.ServerResourcePackBuilder pack, Identifier id) {
-        pack.addLootTable(IdUtils.wrapPath("blocks/", id), loot -> loot
+        pack.addLootTable(getBlocksSubPath(id), loot -> loot
             .type(new Identifier("block"))
             .pool(pool -> pool
                 .rolls(1)
@@ -46,5 +46,15 @@ public class SimpleBlockGenerator implements ResourceGenerator {
     @Override
     public void generateData(ArtificeResourcePack.ServerResourcePackBuilder pack, Identifier id) {
         this.generateLootTable(pack, id);
+    }
+
+    protected static Identifier getBlockSubPath(Identifier blockId) {
+        return IdUtils.wrapPath("block/", blockId);
+    }
+    protected static Identifier getBlockSubPath(Identifier blockId, String suffix) {
+        return IdUtils.wrapPath("block/", blockId, suffix);
+    }
+    protected static Identifier getBlocksSubPath(Identifier blockId) {
+        return IdUtils.wrapPath("blocks/", blockId);
     }
 }

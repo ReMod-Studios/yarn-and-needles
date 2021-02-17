@@ -8,8 +8,8 @@ public class LogBlockGenerator extends SimpleBlockGenerator {
 
     @Override
     protected void generateBlockStates(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
-        Identifier horizontalModelId = IdUtils.wrapPath( "block/", id, "_horizontal");
-        Identifier verticalModelId = IdUtils.wrapPath("block/", id);
+        Identifier horizontalModelId = getBlockSubPath(id, "_horizontal");
+        Identifier verticalModelId = getBlockSubPath(id);
 
         pack.addBlockState(id, state -> state
             .variant("axis=x", variant -> variant.model(horizontalModelId).rotationX(90).rotationY(90))
@@ -19,8 +19,8 @@ public class LogBlockGenerator extends SimpleBlockGenerator {
 
     @Override
     protected void generateModels(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
-        Identifier sideTexturePath = IdUtils.wrapPath("block/", id);
-        Identifier endTexturePath = IdUtils.wrapPath("block/", id, "_top");
+        Identifier sideTexturePath = getBlockSubPath(id);
+        Identifier endTexturePath = getBlockSubPath(id, "_top");
 
         pack.addBlockModel(id, model -> model
             .parent(new Identifier("block/cube_column"))

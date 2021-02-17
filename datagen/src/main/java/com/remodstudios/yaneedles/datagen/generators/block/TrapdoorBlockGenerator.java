@@ -14,7 +14,7 @@ public class TrapdoorBlockGenerator extends SimpleBlockGenerator {
 
     @Override
     protected void generateBlockStates(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
-        Identifier blockPath = IdUtils.wrapPath("block/", id);
+        Identifier blockPath = getBlockSubPath(id);
 
         // @formatter:off
         pack.addBlockState(id, state -> {
@@ -44,7 +44,7 @@ public class TrapdoorBlockGenerator extends SimpleBlockGenerator {
 
     @Override
     protected void generateModels(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
-        Identifier blockPath = IdUtils.wrapPath("block/", id);
+        Identifier blockPath = getBlockSubPath(id);
 
         for (String suffix : VARIANT_SUFFIXES) {
             pack.addBlockModel(IdUtils.wrapPath(id, suffix), model -> model

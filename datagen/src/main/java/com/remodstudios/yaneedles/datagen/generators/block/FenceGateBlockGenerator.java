@@ -1,7 +1,6 @@
 package com.remodstudios.yaneedles.datagen.generators.block;
 
 import com.swordglowsblue.artifice.api.ArtificeResourcePack;
-import com.swordglowsblue.artifice.api.builder.assets.BlockStateBuilder;
 import com.swordglowsblue.artifice.api.util.IdUtils;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -9,25 +8,30 @@ import net.minecraft.block.FenceGateBlock;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 
+import java.util.Map;
+
 public class FenceGateBlockGenerator extends AbstractParentedBlockGenerator {
 
-    private static final Object2IntMap<Direction> dir2Deg = new Object2IntLinkedOpenHashMap<>();
+    private static final Object2IntMap<Direction> DIR2DEG = new Object2IntLinkedOpenHashMap<>();
     private static final String[] VARIANT_SUFFIXES = { "", "_open", "_wall", "_wall_open" };
 
     static {
-        dir2Deg.put(Direction.SOUTH, 0);
-        dir2Deg.put(Direction.WEST, 1);
-        dir2Deg.put(Direction.NORTH, 2);
-        dir2Deg.put(Direction.EAST, 3);
+        DIR2DEG.put(Direction.SOUTH, 0);
+        DIR2DEG.put(Direction.WEST, 1);
+        DIR2DEG.put(Direction.NORTH, 2);
+        DIR2DEG.put(Direction.EAST, 3);
     }
 
+    public FenceGateBlockGenerator(Map<String, String> arguments) {
+        super(arguments);
+    }
     public FenceGateBlockGenerator(Identifier baseBlockId) {
         super(baseBlockId);
     }
 
     @Override
     protected void generateBlockStates(ArtificeResourcePack.ClientResourcePackBuilder rrp, Identifier id) {
-        Identifier blockPath = IdUtils.wrapPath("block/", id);
+        Identifier blockPath = getBlockSubPath(id);
 
         rrp.addBlockState(id, state -> {
             for (Direction facing : FenceGateBlock.FACING.getValues())
@@ -43,7 +47,7 @@ public class FenceGateBlockGenerator extends AbstractParentedBlockGenerator {
                     if (open) modelStr.append("_open");
                     var .model(new Identifier(modelStr.toString()))
                         .uvlock(true)
-                        .rotationY(dir2Deg.getInt(facing) * 90);
+                        .rotationY(DIR2DEG.getInt(facing) * 90);
                 });
             }
         });

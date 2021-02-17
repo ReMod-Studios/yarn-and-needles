@@ -4,15 +4,21 @@ import com.google.gson.JsonObject;
 import com.swordglowsblue.artifice.api.ArtificeResourcePack;
 import com.swordglowsblue.artifice.api.util.IdUtils;
 import net.minecraft.util.Identifier;
+
+import java.util.Map;
+
 public class SlabBlockGenerator extends AbstractParentedBlockGenerator {
 
+    public SlabBlockGenerator(Map<String, String> arguments) {
+        super(arguments);
+    }
     public SlabBlockGenerator(Identifier baseBlockId) {
         super(baseBlockId);
     }
 
     @Override
     protected void generateBlockStates(ArtificeResourcePack.ClientResourcePackBuilder rrp, Identifier id) {
-        Identifier blockPath = IdUtils.wrapPath("block/", id);
+        Identifier blockPath = getBlockSubPath(id);
 
         rrp.addBlockState(id, state -> state
             .variant("type=bottom", v -> v.model(blockPath))
@@ -42,7 +48,7 @@ public class SlabBlockGenerator extends AbstractParentedBlockGenerator {
         JsonObject propertyObject = new JsonObject();
         propertyObject.addProperty("type", "double");
 
-        pack.addLootTable(IdUtils.wrapPath("blocks/", id), loot -> loot
+        pack.addLootTable(getBlocksSubPath(id), loot -> loot
             .pool(pool -> pool
                 .rolls(1)
                 .bonusRolls(0f)

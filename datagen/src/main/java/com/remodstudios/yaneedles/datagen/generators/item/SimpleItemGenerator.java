@@ -5,10 +5,15 @@ import com.swordglowsblue.artifice.api.ArtificeResourcePack;
 import com.swordglowsblue.artifice.api.util.IdUtils;
 import net.minecraft.util.Identifier;
 
+import java.util.Map;
+
 public class SimpleItemGenerator implements ResourceGenerator {
 
     private final Identifier parentModelId;
 
+    public SimpleItemGenerator(Map<String, String> arguments) {
+        this(new Identifier(arguments.get("parentModelId")));
+    }
     public SimpleItemGenerator(Identifier parentModelId) {
         this.parentModelId = parentModelId;
     }

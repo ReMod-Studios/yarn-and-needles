@@ -12,7 +12,7 @@ import net.minecraft.util.math.Direction;
 public class DoorBlockGenerator extends SimpleBlockGenerator {
     @Override
     protected void generateBlockStates(ArtificeResourcePack.ClientResourcePackBuilder rrp, Identifier id) {
-        Identifier blockPath = IdUtils.wrapPath("block/", id);
+        Identifier blockPath = getBlockSubPath(id);
 
         // @formatter:off
         rrp.addBlockState(id, state -> {
@@ -35,8 +35,8 @@ public class DoorBlockGenerator extends SimpleBlockGenerator {
     @Override
     protected void generateModels(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
         String blockPath = id.toString();
-        Identifier topTexId = IdUtils.wrapPath("block/", id, "_top");
-        Identifier bottomTexId = IdUtils.wrapPath("block/", id, "_bottom");
+        Identifier topTexId = getBlockSubPath(id, "_top");
+        Identifier bottomTexId = getBlockSubPath(id, "_bottom");
 
         // @formatter:off
         for (DoubleBlockHalf half : DoorBlock.HALF.getValues()) {
@@ -66,7 +66,7 @@ public class DoorBlockGenerator extends SimpleBlockGenerator {
         JsonObject propertyObject = new JsonObject();
         propertyObject.addProperty("half", "lower");
 
-        pack.addLootTable(IdUtils.wrapPath("blocks/", id), loot -> loot
+        pack.addLootTable(getBlocksSubPath(id), loot -> loot
             .pool(pool -> pool
                 .rolls(1)
                 .bonusRolls(0f)
