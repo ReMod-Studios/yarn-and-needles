@@ -13,7 +13,7 @@ public @interface ResGen {
     Class<? extends ResourceGenerator> value();
 
     /**
-     * In the format {@code "key1:value1,key2:value2, ... keyN:valueN"}
+     * In the format {@code "key1=value1,key2=value2, ... keyN=valueN"}
      */
     String args() default "";
 }
