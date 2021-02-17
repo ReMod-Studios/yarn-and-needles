@@ -11,7 +11,8 @@
     "leocth"
   ],
   "entrypoints": {
-    "main": [ "com.remodstudios.yaneedles.test.Test" ]
+    "main": [ "com.remodstudios.yaneedles.test.Test" ],
+    "client": [ "com.remodstudios.yaneedles.test.TestClient" ]
   },
   "license": "Apache-2.0",
   "environment": "*",

@@ -31,7 +31,7 @@ public @interface ItemRegistry {
 
     /**
      * Sets the default resource generator across the registry.
-     * <p>Defaults to a {@link SimpleBlockGenerator} with no supplied arguments.
+     * <p>Defaults to a {@link SimpleItemGenerator} with no supplied arguments.
      */
     ResGen defaultResourceGenerator() default @ResGen(SimpleItemGenerator.class);
 
