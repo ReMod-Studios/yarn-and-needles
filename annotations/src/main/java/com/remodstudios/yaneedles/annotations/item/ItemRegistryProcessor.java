@@ -28,71 +28,32 @@ import java.util.Set;
 @AutoService(Processor.class)
 @SuppressWarnings("unused")
 public class ItemRegistryProcessor extends AbstractRegistryProcessor<ItemRegistry> {
+
     public ItemRegistryProcessor() {
-        super(ItemRegistry.class, "ITEM");
+        super(ItemRegistry.class, "ITEM", AnnotationParser.INSTANCE);
     }
 
-    @Override
-    protected Map<VariableElement, String> parseEntries(TypeElement classElement, Set<VariableElement> fields, ItemRegistry annotation) throws ProcessingException {
-        Map<VariableElement, String> field2Id = new Object2ObjectLinkedOpenHashMap<>();
-        ItemRegistry registryAnnotation = classElement.getAnnotation(ItemRegistry.class);
+    enum AnnotationParser implements AbstractRegistryProcessor.AnnotationParser<ItemRegistry> {
+        INSTANCE;
 
-        for (VariableElement candidateField : fields) {
-            // Filter out eligible fields
-            ItemRegistry.Entry entryAnnotation = candidateField.getAnnotation(ItemRegistry.Entry.class);
-            if (registryAnnotation.onlyCheckMarkedEntries() && entryAnnotation == null)
-                continue; // ignore
-            field2Id.put(candidateField, processField(classElement.getSimpleName().toString(), registryAnnotation.namespace(), candidateField));
-        }
-        return field2Id;
-    }
-
-    @Override
-    protected void parseResGen(TypeElement classElement, Set<VariableElement> fields, ItemRegistry annotation, Map<VariableElement, String> field2Id) {
-        Map<TypeMirror, List<VariableElement>> seenResGenClassesToFields = new Object2ObjectLinkedOpenHashMap<>();
-        // Set<Pair<Class<? extends ResourceGenerator>, String>> seenUniqueClassArgPairs = new ObjectLinkedOpenHashSet<>();
-
-        TypeMirror defaultGenClass = getResGenClass(annotation.defaultResourceGenerator());
-
-        for (VariableElement field : fields) {
-            TypeMirror genClass = defaultGenClass;
-            ResGen resGen = field.getAnnotation(ResGen.class);
-            if (resGen != null)
-                genClass = getResGenClass(resGen);
-
-            List<VariableElement> list = seenResGenClassesToFields.get(genClass);
-            if (list == null) {
-                seenResGenClassesToFields.put(genClass, Lists.newArrayList(field));
-            }
-            else {
-                list.add(field);
-            }
+        @Override
+        public String outputClassName(ItemRegistry anno) {
+            return anno.outputClassName();
         }
 
-        clinitBuilder.beginControlFlow("RESOURCE_GENERATORS = new ResourceGenerator[]"); // this actually isnt control flow but whatever
-
-        // fuck i miss `auto` now - leocth
-        int i = 0; // this is so cursed; please refactor
-        Iterator<Map.Entry<TypeMirror, List<VariableElement>>> iterator = seenResGenClassesToFields.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<TypeMirror, List<VariableElement>> entry = iterator.next();
-            clinitBuilder.add("new $T()", entry.getKey());
-            if (iterator.hasNext()) clinitBuilder.add(",");
-            clinitBuilder.add("\n");
-
-            for (VariableElement field : entry.getValue()) {
-                initMethodBuilder.addStatement("RESOURCE_GENERATORS[$L].generateData(pack, new $T($S))", i, Identifier.class, field2Id.get(field));
-                clientInitMethodBuilder.addStatement("RESOURCE_GENERATORS[$L].generateAssets(pack, new $T($S))", i, Identifier.class, field2Id.get(field));
-            }
-            i++;
+        @Override
+        public String namespace(ItemRegistry anno) {
+            return anno.namespace();
         }
 
-        clinitBuilder.endControlFlow(""); // this is cheaty but it works
-    }
+        @Override
+        public boolean onlyCheckMarkedEntries(ItemRegistry anno) {
+            return anno.onlyCheckMarkedEntries();
+        }
 
-    // this is the jank you have to deal with cos java does not allow inheritance in annotations
-    @Override
-    protected String getOutputClassName(ItemRegistry annotation) {
-        return annotation.outputClassName();
+        @Override
+        public ResGen defaultResourceGenerator(ItemRegistry anno) {
+            return anno.defaultResourceGenerator();
+        }
     }
 }

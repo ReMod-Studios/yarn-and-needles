@@ -7,7 +7,7 @@ import net.minecraft.util.Identifier;
 import java.io.IOException;
 
 public class Test implements ModInitializer {
-    public static final String MOD_ID = "yaneedles_test";
+    public static final String MOD_ID = "yaneedlestest";
 
     @Override
     public void onInitialize() {

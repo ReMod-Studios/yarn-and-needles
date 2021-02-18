@@ -1,39 +1,44 @@
 package com.remodstudios.yaneedles.annotations;
 
+import com.remodstudios.yaneedles.annotations.block.BlockRegistry;
 import com.remodstudios.yaneedles.datagen.ResourceGenerator;
 import com.squareup.javapoet.*;
 import com.swordglowsblue.artifice.api.ArtificeResourcePack;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.registry.Registry;
 
 import javax.annotation.processing.*;
 import javax.lang.model.element.*;
-import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
+import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
-import java.util.Map;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // TODO a lil messy atm, will clean later - leocth
 public abstract class AbstractRegistryProcessor<A extends Annotation> extends AbstractProcessor {
 
     protected Messager messager;
     protected Filer filer;
+    protected Types types;
     protected final Class<A> annoClass;
     protected final String registryName;
+    protected final AnnotationParser<A> annotationParser;
     protected final CodeBlock.Builder clinitBuilder;
     protected final MethodSpec.Builder initMethodBuilder;
     protected final MethodSpec.Builder clientInitMethodBuilder;
 
-    public AbstractRegistryProcessor(Class<A> annoClass, String registryName) {
+    public AbstractRegistryProcessor(Class<A> annoClass, String registryName, AnnotationParser<A> annotationParser) {
         this.annoClass = annoClass;
         this.registryName = registryName;
+        this.annotationParser = annotationParser;
         this.clinitBuilder = CodeBlock.builder();
         this.initMethodBuilder = MethodSpec.methodBuilder("init")
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -48,100 +53,101 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
         super.init(processingEnv);
         this.messager = processingEnv.getMessager();
         this.filer = processingEnv.getFiler();
+        this.types = processingEnv.getTypeUtils();
+    }
+
+    // aaaaaaaaaaaaaaaaa
+    protected interface AnnotationParser<A extends Annotation> {
+        String outputClassName(A anno);
+        String namespace(A anno);
+        boolean onlyCheckMarkedEntries(A anno);
+        ResGen defaultResourceGenerator(A anno);
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        return safeExecute(roundEnv, (e, annotation) -> {
+        return safeExecute(roundEnv, (e, anno) -> {
             if (!e.getKind().isClass()) {
                 throw new ProcessingException("Only classes and enums may be annotated with @" + annoClass.getSimpleName(), e);
             }
-            processElement((TypeElement) e, annotation); // safe
+            TypeElement classElement = (TypeElement) e;
+            Set<CompactedEntry> entries = getEntries(classElement, annotationParser.onlyCheckMarkedEntries(anno), BlockRegistry.Entry.class);
+
+            List<String> ids = new ObjectArrayList<>();
+            // TODO: use `Either` to support arged generators?
+            List<TypeMirror> seenResGenClasses = new ObjectArrayList<>();
+            TypeMirror defaultGenClass = ProcessingHelpers.getResGenClass(annotationParser.defaultResourceGenerator(anno));
+
+            entries.forEach(entry -> {
+                entry.idIndex = ids.size();
+                ids.add(ProcessingHelpers.getIdFromField(annotationParser.namespace(anno), entry.field));
+
+                TypeMirror genClass = defaultGenClass;
+                ResGen resGen = entry.field.getAnnotation(ResGen.class);
+                if (resGen != null) genClass = ProcessingHelpers.getResGenClass(resGen);
+
+                // TODO use Types.isSameType
+                entry.resGenIndex = seenResGenClasses.indexOf(genClass);
+                if (entry.resGenIndex == -1) {
+                    entry.resGenIndex = seenResGenClasses.size();
+                    seenResGenClasses.add(genClass);
+                }
+            });
+
+            String inputClassName = classElement.getSimpleName().toString();
+
+            // uh so this is my way of making arrays; im sorry lol - leocth
+            clinitBuilder.beginControlFlow("RESOURCE_GENERATORS = new $T[]", ResourceGenerator.class);
+
+            ListIterator<TypeMirror> resGenIter = seenResGenClasses.listIterator();
+            while (resGenIter.hasNext()) {
+                TypeMirror resGen = resGenIter.next();
+                clinitBuilder.add("new $T()", resGen);
+                if (resGenIter.hasNext()) clinitBuilder.add(",");
+                clinitBuilder.add("\n");
+            }
+            //TODO arged resgens
+            clinitBuilder.endControlFlow("");
+
+            clinitBuilder.beginControlFlow("IDENTIFIERS = new $T[]", Identifier.class);
+            ListIterator<String> idIter = ids.listIterator();
+            while (idIter.hasNext()) {
+                String id = idIter.next();
+                clinitBuilder.add("new $T($S)", Identifier.class, id);
+                if (idIter.hasNext()) clinitBuilder.add(",");
+                clinitBuilder.add("\n");
+            }
+            clinitBuilder.endControlFlow("");
+
+            for (CompactedEntry entry : entries) {
+                initMethodBuilder
+                    .addStatement(
+                        "$1T.register($1T.$2L, IDENTIFIERS[$3L], $4N.$5L)",
+                        Registry.class, registryName, entry.idIndex,
+                        inputClassName,
+                        entry.getFieldName()
+                    )
+                    .addStatement("RESOURCE_GENERATORS[$L].generateData(pack, IDENTIFIERS[$L])", entry.resGenIndex, entry.idIndex);
+
+                clientInitMethodBuilder
+                    .addStatement("RESOURCE_GENERATORS[$L].generateAssets(pack, IDENTIFIERS[$L])", entry.resGenIndex, entry.idIndex);
+            }
+
+            writeRegistry(classElement, anno);
         });
     }
 
-    /**
-     * Some exception handling and logging wrappers
-     *
-     * @param roundEnv the round environment; used for getting all annotated elements
-     * @param routine the routine/callback to call on each element and annotation pair
-     */
-    protected boolean safeExecute(RoundEnvironment roundEnv, SafeProcessRoutine<A> routine) {
-        try {
-            for (Element e : roundEnv.getElementsAnnotatedWith(annoClass))
-                routine.run(e, e.getAnnotation(annoClass));
-        }
-        catch (ProcessingException e) {
-            messager.printMessage(
-                    Diagnostic.Kind.ERROR,
-                    e.getMessage(),
-                    e.culprit
-            );
-            return true;
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
+    public static class CompactedEntry {
+        public final VariableElement field;
+        public int idIndex;
+        public int resGenIndex;
+
+        public CompactedEntry(VariableElement field) { this.field = field; }
+
+        public String getFieldName() { return field.getSimpleName().toString(); }
     }
 
-    protected void processElement(TypeElement classElement, A annotation) throws ProcessingException, IOException {
-        Set<VariableElement> fields = getFields(classElement);
-        parseResGen(classElement, fields, annotation, parseEntries(classElement, fields, annotation));
-        writeRegistry(classElement, annotation);
-    }
 
-    protected abstract Map<VariableElement, String> parseEntries(
-        TypeElement classElement,
-        Set<VariableElement> fields,
-        A annotation
-    ) throws ProcessingException;
-
-    protected abstract void parseResGen(
-        TypeElement classElement,
-        Set<VariableElement> fields,
-        A annotation,
-        Map<VariableElement, String> field2IdMap
-    );
-
-    /**
-     * Processes a single field and adds the registry id to the field name to a map.
-     */
-    protected String processField(String inputClassName, String namespace, VariableElement field) throws ProcessingException {
-        if (!field.getModifiers().contains(Modifier.STATIC))
-            throw new ProcessingException("Candidate field does not meet expectations! (Expected a static field)", field);
-
-        // Deduce register IDs
-        String path = tryParsePath(field);
-
-        Identifier id;
-        try {
-            id = new Identifier(namespace, path);
-        } catch (InvalidIdentifierException e) {
-            // oopsie x(
-            throw new ProcessingException(
-                String.format(
-                    "Deduced identifier (%s:%s) does not conform to the Minecraft identifier format: %s",
-                    namespace, path, e.getMessage()
-                ),
-                e, field
-            );
-        }
-
-        initMethodBuilder.addStatement(
-                "$1T.register($1T.$2N, $3S, $4N.$5N)",
-                Registry.class,
-                registryName,
-                id.toString(),
-                inputClassName,
-                field.getSimpleName().toString()
-            );
-
-        return id.toString();
-    }
-
-    protected abstract String getOutputClassName(A annotation);
 
     /**
      * Generates the resultant registry file.
@@ -149,7 +155,7 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
     protected void writeRegistry(TypeElement classElement, A annotation) throws IOException {
         String packageName = ((PackageElement)classElement.getEnclosingElement()).getQualifiedName().toString();
         String inputClassName = classElement.getSimpleName().toString();
-        String outputClassName = getOutputClassName(annotation);
+        String outputClassName = annotationParser.outputClassName(annotation);
         if (outputClassName.isEmpty())
             outputClassName = inputClassName + "Registry";
 
@@ -157,23 +163,28 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
         String outputClassQualifiedName = packageName + "." + outputClassName;
 
         TypeSpec registryType = TypeSpec.classBuilder(outputClassName)
-                .addModifiers(Modifier.PUBLIC)
-                .addField(
-                    ResourceGenerator[].class,
-                    "RESOURCE_GENERATORS",
-                    Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL
-                )
-                .addStaticBlock(clinitBuilder.build())
-                .addMethod(initMethodBuilder.build())
-                .addMethod(clientInitMethodBuilder.build())
-                .build();
+            .addModifiers(Modifier.PUBLIC)
+            .addField(
+                ResourceGenerator[].class,
+                "RESOURCE_GENERATORS",
+                Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL
+            )
+            .addField(
+                Identifier[].class,
+                "IDENTIFIERS",
+                Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL
+            )
+            .addStaticBlock(clinitBuilder.build())
+            .addMethod(initMethodBuilder.build())
+            .addMethod(clientInitMethodBuilder.build())
+            .build();
 
         JavaFile registryFile = JavaFile.builder(packageName, registryType)
-                .addFileComment(
-                        "\nGenerated file - all manual changes will be overwritten!\n" +
-                                "Generated from: $L.java\n",
-                        inputClassName)
-                .build();
+            .addFileComment(
+                "\nGenerated file - all manual changes will be overwritten!\n" +
+                        "Generated from: $L.java\n",
+                inputClassName)
+            .build();
 
         JavaFileObject registrantFile = filer.createSourceFile(outputClassQualifiedName);
 
@@ -183,40 +194,23 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
     }
 
     /**
-     * Attempts to parse an identifier path from metadata:
-     * <p>If a @{@link CustomId} annotation exists then use the custom id specified,
-     * otherwise attempts to guess the path by lower-casing the field name.
-     *
-     * @param element the element
+     * Wrappers around wrappers
      */
-    public static String tryParsePath(Element element) {
-        CustomId customIdAnno = element.getAnnotation(CustomId.class);
-        String fieldName = element.getSimpleName().toString();
-        if (customIdAnno != null && !customIdAnno.value().isEmpty())
-            return customIdAnno.value();
-        else {
-            return fieldName.toLowerCase(); // guesswork
-        }
+    public boolean safeExecute(RoundEnvironment roundEnv, SafeProcessRoutine<A> routine) {
+        return ProcessingHelpers.safeExecute(messager, roundEnv, annoClass, routine);
     }
 
-    public static Set<VariableElement> getFields(TypeElement classElement) {
-        return classElement.getEnclosedElements().stream()
-            .filter(e -> e.getKind().isField())
-            .map(VariableElement.class::cast)
+    public <AE extends Annotation> Set<CompactedEntry> getEntries(TypeElement classElement, boolean onlyCheckMarked, Class<AE> entryClass) {
+        Stream<VariableElement> stream = classElement.getEnclosedElements().stream()
+            .filter(e -> e.getKind().isField() && e.getModifiers().contains(Modifier.STATIC))
+            .map(VariableElement.class::cast);
+
+        if (onlyCheckMarked)
+            stream = stream.filter(f -> ProcessingHelpers.hasAnnotation(f, entryClass));
+
+        return stream
+            .map(CompactedEntry::new)
             .collect(Collectors.toSet());
     }
 
-    public static TypeMirror getResGenClass(ResGen resGen) {
-        // thank you java very cool
-        try
-        {
-            //noinspection unused
-            Class<?> whatever = resGen.value();
-        }
-        catch( MirroredTypeException mte )
-        {
-            return mte.getTypeMirror();
-        }
-        return null; // can this ever happen ??
-    }
 }

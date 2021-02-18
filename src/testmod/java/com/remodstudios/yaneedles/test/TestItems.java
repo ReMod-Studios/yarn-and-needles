@@ -11,11 +11,11 @@ import net.minecraft.item.Item;
 @ItemRegistry(namespace = Test.MOD_ID)
 public class TestItems {
     @ResGen(BlockItemGenerator.class)
-    public static BlockItem YAY = new BlockItem(TestBlocks.YAY, new FabricItemSettings());
+    public static final BlockItem YAY = new BlockItem(TestBlocks.YAY, new FabricItemSettings());
     @ResGen(BlockItemGenerator.class)
-    public static BlockItem YAYER = new BlockItem(TestBlocks.YAYER, new FabricItemSettings());
+    public static final BlockItem YAYER = new BlockItem(TestBlocks.YAYER, new FabricItemSettings());
     @CustomId("yayn-t")
     @ResGen(BlockItemGenerator.class)
-    public static BlockItem YAYN_T = new BlockItem(TestBlocks.YAYN_T, new FabricItemSettings());
-    public static Item HAI = new Item(new FabricItemSettings());
+    public static final BlockItem YAYN_T = new BlockItem(TestBlocks.YAYN_T, new FabricItemSettings());
+    public static final Item HAI = new Item(new FabricItemSettings());
 }
