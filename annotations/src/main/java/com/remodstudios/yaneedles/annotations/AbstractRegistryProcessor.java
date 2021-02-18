@@ -4,8 +4,10 @@ import com.remodstudios.yaneedles.annotations.block.BlockRegistry;
 import com.remodstudios.yaneedles.datagen.ResourceGenerator;
 import com.squareup.javapoet.*;
 import com.swordglowsblue.artifice.api.ArtificeResourcePack;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
 
 import javax.annotation.processing.*;
@@ -16,9 +18,7 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,6 +64,15 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
         ResGen defaultResourceGenerator(A anno);
     }
 
+    protected GeneratorEntry parseGeneratorEntry(ResGen resGen) {
+        TypeMirror resGenClass = ProcessingHelpers.getResGenClass(resGen);
+        String args = resGen.args();
+        if (!args.isEmpty())
+            return new GeneratorEntry.WithArgs(types, resGenClass, args);
+        else
+            return new GeneratorEntry.Simple(types, resGenClass);
+    }
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         return safeExecute(roundEnv, (e, anno) -> {
@@ -71,26 +80,25 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
                 throw new ProcessingException("Only classes and enums may be annotated with @" + annoClass.getSimpleName(), e);
             }
             TypeElement classElement = (TypeElement) e;
-            Set<CompactedEntry> entries = getEntries(classElement, annotationParser.onlyCheckMarkedEntries(anno), BlockRegistry.Entry.class);
+            List<CompactedEntry> entries = getEntries(classElement, annotationParser.onlyCheckMarkedEntries(anno), BlockRegistry.Entry.class);
 
             List<String> ids = new ObjectArrayList<>();
             // TODO: use `Either` to support arged generators?
-            List<TypeMirror> seenResGenClasses = new ObjectArrayList<>();
-            TypeMirror defaultGenClass = ProcessingHelpers.getResGenClass(annotationParser.defaultResourceGenerator(anno));
+            List<GeneratorEntry> seenResGens = new ObjectArrayList<>();
+            GeneratorEntry defaultResGen = parseGeneratorEntry(annotationParser.defaultResourceGenerator(anno));
 
             entries.forEach(entry -> {
                 entry.idIndex = ids.size();
                 ids.add(ProcessingHelpers.getIdFromField(annotationParser.namespace(anno), entry.field));
 
-                TypeMirror genClass = defaultGenClass;
+                GeneratorEntry genEntry = defaultResGen;
                 ResGen resGen = entry.field.getAnnotation(ResGen.class);
-                if (resGen != null) genClass = ProcessingHelpers.getResGenClass(resGen);
+                if (resGen != null) genEntry = parseGeneratorEntry(resGen);
 
-                // TODO use Types.isSameType
-                entry.resGenIndex = seenResGenClasses.indexOf(genClass);
+                entry.resGenIndex = seenResGens.indexOf(genEntry);
                 if (entry.resGenIndex == -1) {
-                    entry.resGenIndex = seenResGenClasses.size();
-                    seenResGenClasses.add(genClass);
+                    entry.resGenIndex = seenResGens.size();
+                    seenResGens.add(genEntry);
                 }
             });
 
@@ -99,10 +107,10 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
             // uh so this is my way of making arrays; im sorry lol - leocth
             clinitBuilder.beginControlFlow("RESOURCE_GENERATORS = new $T[]", ResourceGenerator.class);
 
-            ListIterator<TypeMirror> resGenIter = seenResGenClasses.listIterator();
+            ListIterator<GeneratorEntry> resGenIter = seenResGens.listIterator();
             while (resGenIter.hasNext()) {
-                TypeMirror resGen = resGenIter.next();
-                clinitBuilder.add("new $T()", resGen);
+                GeneratorEntry resGen = resGenIter.next();
+                resGen.writeToClinit(clinitBuilder);
                 if (resGenIter.hasNext()) clinitBuilder.add(",");
                 clinitBuilder.add("\n");
             }
@@ -146,8 +154,6 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
 
         public String getFieldName() { return field.getSimpleName().toString(); }
     }
-
-
 
     /**
      * Generates the resultant registry file.
@@ -200,7 +206,7 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
         return ProcessingHelpers.safeExecute(messager, roundEnv, annoClass, routine);
     }
 
-    public <AE extends Annotation> Set<CompactedEntry> getEntries(TypeElement classElement, boolean onlyCheckMarked, Class<AE> entryClass) {
+    public <AE extends Annotation> List<CompactedEntry> getEntries(TypeElement classElement, boolean onlyCheckMarked, Class<AE> entryClass) {
         Stream<VariableElement> stream = classElement.getEnclosedElements().stream()
             .filter(e -> e.getKind().isField() && e.getModifiers().contains(Modifier.STATIC))
             .map(VariableElement.class::cast);
@@ -210,7 +216,7 @@ public abstract class AbstractRegistryProcessor<A extends Annotation> extends Ab
 
         return stream
             .map(CompactedEntry::new)
-            .collect(Collectors.toSet());
+            .collect(Collectors.toList());
     }
 
 }
