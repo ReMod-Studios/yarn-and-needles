@@ -1,4 +1,0 @@
-dependencies {
-    modApi "com.lettuce.fudge:artifice:$artifice_version"
-    include "com.lettuce.fudge:artifice:$artifice_version"
-}

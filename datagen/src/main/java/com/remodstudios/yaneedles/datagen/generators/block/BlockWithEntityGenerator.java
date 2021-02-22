@@ -13,7 +13,7 @@ public class BlockWithEntityGenerator extends SimpleBlockGenerator {
     public BlockWithEntityGenerator(Map<String, String> arguments) {
         this(new Identifier(arguments.get("particleTextureId")));
     }
-    public BlockWithEntityGenerator(Identifier particleTextureId) {
+    public BlockWithEntityGenerator(@NotNull Identifier particleTextureId) {
         this.particleTextureId = particleTextureId;
     }
 

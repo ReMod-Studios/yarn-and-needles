@@ -1,0 +1,5 @@
+include(
+    ":extensions",
+    ":datagen",
+    ":annotations"
+)

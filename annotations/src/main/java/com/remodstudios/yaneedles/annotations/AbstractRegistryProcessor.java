@@ -4,10 +4,8 @@ import com.remodstudios.yaneedles.annotations.block.BlockRegistry;
 import com.remodstudios.yaneedles.datagen.ResourceGenerator;
 import com.squareup.javapoet.*;
 import com.swordglowsblue.artifice.api.ArtificeResourcePack;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
 
 import javax.annotation.processing.*;

@@ -23,7 +23,7 @@ public class SimpleItemGenerator implements ResourceGenerator {
 
     protected void generateItemModel(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
         pack.addItemModel(id, model -> model
-            .parent(new Identifier("item/generated"))
+            .parent(parentModelId)
             .texture("layer0", IdUtils.wrapPath("item/", id))
         );
     }
