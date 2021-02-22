@@ -56,7 +56,7 @@ publishing {
             artifact(tasks["jar"]) {
                 builtBy(tasks["remapJar"])
             }
-            artifact("${buildDir.absolutePath}/libs/$name-$version.jar"){
+            artifact("${buildDir.absolutePath}/libs/${project.name}-${project.version}.jar"){
                 builtBy(tasks["remapJar"])
             }
             artifact(tasks["sourcesJar"]) {
