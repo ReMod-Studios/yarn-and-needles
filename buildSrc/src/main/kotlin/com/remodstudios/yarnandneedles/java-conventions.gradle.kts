@@ -1,7 +1,7 @@
 package com.remodstudios.yarnandneedles
 
 plugins {
-    java
+    `java-library`
 }
 
 java {

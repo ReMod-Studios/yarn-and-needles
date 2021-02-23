@@ -11,6 +11,5 @@ dependencies {
 
     compileOnly("com.google.auto.service:auto-service-annotations:$autoServiceVersion")
     annotationProcessor("com.google.auto.service:auto-service:$autoServiceVersion")
-    implementation("com.google.auto:auto-common:$autoCommonVersion")
-    implementation("com.squareup:javapoet:$javapoetVersion")
+    api("com.squareup:javapoet:$javapoetVersion")
 }
