@@ -21,7 +21,6 @@ sourceSets {
 
 dependencies {
     // for some reason these dont show up in kotlin dsl... strange - leocth
-    configurations["testmodAnnotationProcessor"](project(":annotations"))
     configurations["testmodCompile"](mainSourceSet.output)
 }
 
