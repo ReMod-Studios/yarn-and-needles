@@ -3,9 +3,7 @@ plugins {
 }
 
 repositories {
-	maven {
-		url = uri("https://maven.dblsaiko.net/")
-	}
+	maven("https://maven.dblsaiko.net/")
 }
 
 val artificeVersion: String by project
