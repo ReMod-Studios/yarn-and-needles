@@ -6,19 +6,20 @@ import com.swordglowsblue.artifice.api.util.IdUtils;
 import net.minecraft.util.Identifier;
 
 public class SimpleItemGenerator implements ResourceGenerator {
+    protected static final Identifier DEFAULT_PARENT_ID = new Identifier("item/generated");
 
-    private final Identifier parentModelId;
+    protected final Identifier parentModelId;
 
     public SimpleItemGenerator(Identifier parentModelId) {
         this.parentModelId = parentModelId;
     }
     public SimpleItemGenerator() {
-        this(new Identifier("item/generated"));
+        this(DEFAULT_PARENT_ID);
     }
 
     protected void generateItemModel(ArtificeResourcePack.ClientResourcePackBuilder pack, Identifier id) {
         pack.addItemModel(id, model -> model
-            .parent(new Identifier("item/generated"))
+            .parent(parentModelId)
             .texture("layer0", IdUtils.wrapPath("item/", id))
         );
     }
