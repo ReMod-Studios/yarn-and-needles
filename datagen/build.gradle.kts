@@ -2,9 +2,15 @@ plugins {
     id("com.remodstudios.yarnandneedles.module-conventions")
 }
 
+repositories {
+	maven {
+		url = uri("https://maven.dblsaiko.net/")
+	}
+}
+
 val artificeVersion: String by project
 
 dependencies {
-    modApi("com.lettuce.fudge:artifice:$artificeVersion")
-    include("com.lettuce.fudge:artifice:$artificeVersion")
+    modApi("de.kb1000:artifice:$artificeVersion")
+    include("de.kb1000:artifice:$artificeVersion")
 }
