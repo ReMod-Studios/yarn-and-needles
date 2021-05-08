@@ -92,13 +92,6 @@ public class BlockRegistry {
     }
 
     public static class RegistrySettings extends SimpleAttributeHolder {
-        public enum BlockRenderLayer {
-            OPAQUE,
-            CUTOUT,
-            CUTOUT_MIPPED,
-            TRANSLUCENT
-        }
-
         public final ResourceGenerator resourceGenerator;
         public final BlockRenderLayer renderLayer;
 
