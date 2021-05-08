@@ -2,6 +2,7 @@ package com.remodstudios.yarnandneedles.items;
 
 import com.remodstudios.yarnandneedles.datagen.ResourceGenerator;
 import com.remodstudios.yarnandneedles.datagen.ResourceGenerators;
+import com.remodstudios.yarnandneedles.util.SimpleAttributeHolder;
 import com.swordglowsblue.artifice.api.ArtificeResourcePack;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -13,6 +14,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.registry.Registry;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ItemRegistry {
     public final Map<Identifier, Pair<Item, ResourceGenerator>> ITEMS = new Object2ObjectLinkedOpenHashMap<>();
@@ -76,10 +78,11 @@ public class ItemRegistry {
         return new FabricItemSettings();
     }
 
-    public static class RegistrySettings {
+    public static class RegistrySettings extends SimpleAttributeHolder {
         public final ResourceGenerator resourceGenerator;
 
         protected RegistrySettings(ResourceGenerator resourceGenerator) {
+            super();
             this.resourceGenerator = resourceGenerator;
         }
 
@@ -88,6 +91,17 @@ public class ItemRegistry {
         }
         public static RegistrySettings of(ResourceGenerator resourceGenerator) {
             return new RegistrySettings(resourceGenerator);
+        }
+
+        public static RegistrySettings of(Consumer<RegistrySettings> initializer) {
+            RegistrySettings registrySettings = of();
+            initializer.accept(registrySettings);
+            return registrySettings;
+        }
+        public static RegistrySettings of(ResourceGenerator resourceGenerator, Consumer<RegistrySettings> initializer) {
+            RegistrySettings registrySettings = of(resourceGenerator);
+            initializer.accept(registrySettings);
+            return registrySettings;
         }
     }
 }

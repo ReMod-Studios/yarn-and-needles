@@ -1,8 +1,11 @@
 package com.remodstudios.yarnandneedles.blocks;
 
 import com.remodstudios.yarnandneedles.datagen.ResourceGenerator;
+import com.remodstudios.yarnandneedles.util.SimpleAttributeHolder;
 import com.swordglowsblue.artifice.api.ArtificeResourcePack;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.minecraft.block.Block;
 import net.minecraft.client.render.RenderLayer;
@@ -11,6 +14,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.registry.Registry;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static com.remodstudios.yarnandneedles.datagen.ResourceGenerators.SIMPLE_BLOCK;
 
@@ -30,8 +34,32 @@ public class BlockRegistry {
         BLOCKS.forEach((id, pair) -> {
             Block block = pair.getLeft();
             Registry.register(Registry.BLOCK, id, block);
-            RenderLayer layer = pair.getRight().renderLayer;
-            if (layer != null) BlockRenderLayerMap.INSTANCE.putBlock(block, layer);
+        });
+    }
+
+    @Environment(EnvType.CLIENT)
+    public void initClient() {
+        putRenderLayers();
+    }
+
+    @Environment(EnvType.CLIENT)
+    public void putRenderLayers() {
+        BLOCKS.forEach((id, pair) -> {
+            Block block = pair.getLeft();
+            switch (pair.getRight().renderLayer) {
+            case CUTOUT:
+                BlockRenderLayerMap.INSTANCE.putBlock(block, RenderLayer.getCutout());
+                break;
+            case CUTOUT_MIPPED:
+                BlockRenderLayerMap.INSTANCE.putBlock(block, RenderLayer.getCutoutMipped());
+                break;
+            case TRANSLUCENT:
+                BlockRenderLayerMap.INSTANCE.putBlock(block, RenderLayer.getTranslucent());
+                break;
+            case OPAQUE:
+            default:
+                break;
+            }
         });
     }
 
@@ -63,23 +91,48 @@ public class BlockRegistry {
                 .orElseThrow(() -> new IllegalStateException("Block not found in registry!"));
     }
 
-    public static class RegistrySettings {
-        public final ResourceGenerator resourceGenerator;
-        public final RenderLayer renderLayer;
+    public static class RegistrySettings extends SimpleAttributeHolder {
+        public enum BlockRenderLayer {
+            OPAQUE,
+            CUTOUT,
+            CUTOUT_MIPPED,
+            TRANSLUCENT
+        }
 
-        protected RegistrySettings(ResourceGenerator resourceGenerator, RenderLayer renderLayer) {
+        public final ResourceGenerator resourceGenerator;
+        public final BlockRenderLayer renderLayer;
+
+        protected RegistrySettings(ResourceGenerator resourceGenerator, BlockRenderLayer renderLayer) {
+            super();
             this.resourceGenerator = resourceGenerator;
             this.renderLayer = renderLayer;
         }
 
         public static RegistrySettings of() {
-            return new RegistrySettings(SIMPLE_BLOCK, null);
+            return new RegistrySettings(SIMPLE_BLOCK, BlockRenderLayer.OPAQUE);
         }
         public static RegistrySettings of(ResourceGenerator resourceGenerator) {
-            return new RegistrySettings(resourceGenerator, null);
+            return new RegistrySettings(resourceGenerator, BlockRenderLayer.OPAQUE);
         }
-        public static RegistrySettings of(ResourceGenerator resourceGenerator, RenderLayer renderLayer) {
+        public static RegistrySettings of(ResourceGenerator resourceGenerator, BlockRenderLayer renderLayer) {
             return new RegistrySettings(resourceGenerator, renderLayer);
+        }
+
+        public static RegistrySettings of(Consumer<RegistrySettings> initializer) {
+            RegistrySettings registrySettings = of();
+            initializer.accept(registrySettings);
+            return registrySettings;
+        }
+        public static RegistrySettings of(ResourceGenerator resourceGenerator, Consumer<RegistrySettings> initializer) {
+            RegistrySettings registrySettings = of(resourceGenerator);
+            initializer.accept(registrySettings);
+            return registrySettings;
+        }
+        public static RegistrySettings of(ResourceGenerator resourceGenerator, BlockRenderLayer renderLayer,
+                                          Consumer<RegistrySettings> initializer) {
+            RegistrySettings registrySettings = of(resourceGenerator, renderLayer);
+            initializer.accept(registrySettings);
+            return registrySettings;
         }
     }
 }
